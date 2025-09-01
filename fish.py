@@ -17,6 +17,10 @@ class Fish:
         self.background_color = background_color
         self.direction = random.choice(['forward', 'backward'])
 
+        # If a child class (like PufferFish) hasn't already set these, set them now.
+        if not hasattr(self, 'category') or not hasattr(self, 'fish_type'):
+            self.category, self.fish_type = self._get_random_fish_details()
+
         self._init_art_and_color()
         self._init_position_and_speed()
         
@@ -27,74 +31,82 @@ class Fish:
         self.startle_timer = 0.0
         self.peak_startle_speed = 0.0
 
+    def _get_random_fish_details(self):
+        """Selects a random category and fish type from that category."""
+        spawn_chance = random.random()
+        if spawn_chance < 0.02: category = 'multi_line_large'
+        elif spawn_chance < 0.30: category = 'multi_line_small'
+        else: category = 'single_line'
+        
+        arts_list = FISH_ART_STYLES[category]['forward']
+        fish_type, _ = random.choice(arts_list)
+        return category, fish_type
+
     def _init_art_and_color(self):
         """
-        Initializes art and color, processing it into a ready-to-draw format.
-        This new logic is more direct and robust against data format errors.
+        Initializes art and color using the stored category for a direct lookup.
         """
         try:
-            spawn_chance = random.random()
-            if spawn_chance < 0.02: category = 'multi_line_large'
-            elif spawn_chance < 0.30: category = 'multi_line_small'
-            else: category = 'single_line'
+            forward_arts = FISH_ART_STYLES[self.category]['forward']
+            backward_arts = FISH_ART_STYLES[self.category]['backward']
+            
+            forward_template = next((art for type, art in forward_arts if type == self.fish_type), None)
+            backward_template = next((art for type, art in backward_arts if type == self.fish_type), None)
+            
+            if not forward_template: raise ValueError(f"No forward art found for {self.fish_type} in category {self.category}")
+            if not backward_template: backward_template = forward_template
 
-            forward_arts = FISH_ART_STYLES[category]['forward']
-            backward_arts = FISH_ART_STYLES[category]['backward']
-            
-            idx = random.randint(0, len(forward_arts) - 1)
-            self.fish_type, forward_template = forward_arts[idx]
-            
-            if idx < len(backward_arts):
-                _, backward_template = backward_arts[idx]
+            color_data = FISH_COLOR_SETS.get(self.fish_type)
+            is_multicolor = isinstance(color_data, dict)
+
+            self.color_map = {}
+            self.base_color = None
+            if is_multicolor:
+                for key, colors in color_data.items():
+                    self.color_map[key] = random.choice(colors)
             else:
-                backward_template = forward_template
+                self.base_color = random.choice(color_data if color_data else [Fore.WHITE])
 
-            # Process both art templates into a final, drawable format.
-            self.forward_art = self._process_art(forward_template)
-            self.backward_art = self._process_art(backward_template)
+            self.forward_art = self._process_art_template(forward_template)
+            self.backward_art = self._process_art_template(backward_template)
             
             self.art = self.forward_art if self.direction == 'forward' else self.backward_art
 
         except Exception as e:
             print(f"{Fore.RED}Critical Error initializing fish '{getattr(self, 'fish_type', 'unknown')}': {e}{Style.RESET_ALL}")
-            self.art = [[('X', Fore.RED)]] # Failsafe art
+            self.art = [[('X', Fore.RED)]]
 
-    def _process_art(self, template):
-        """
-        A unified function to process any art template into a drawable grid.
-        """
-        processed_grid = []
-        color_data = FISH_COLOR_SETS.get(self.fish_type, [Fore.WHITE])
-        is_multicolor_dict = isinstance(template, dict)
-        
-        if is_multicolor_dict:
-            # RLE multi-color format
-            color_map = {}
-            if isinstance(color_data, dict):
-                for key, colors in color_data.items():
-                    color_map[key] = random.choice(colors)
-            
-            for line_template in template['art']:
-                line = []
-                for color_key, chars in line_template:
-                    color = color_map.get(color_key, Fore.WHITE)
-                    for char in chars:
-                        line.append((char, color))
-                processed_grid.append(line)
+    def _process_art_template(self, template):
+        """Determines the art format and processes it into a final drawable grid."""
+        if isinstance(template, dict):
+            return self._process_multicolor_art(template['art'])
         else:
-            # Single-color format (string or tuple of strings)
-            base_color = random.choice(color_data)
             art_tuple = (template,) if isinstance(template, str) else template
-            for line_str in art_tuple:
-                line = []
-                for char in line_str:
-                    line.append((char, base_color))
-                processed_grid.append(line)
-        
+            return self._process_single_color_art(art_tuple)
+
+    def _process_multicolor_art(self, art_template):
+        """Converts a run-length encoded art template into a drawable grid."""
+        processed_grid = []
+        for line_template in art_template:
+            line = []
+            for color_key, chars in line_template:
+                color = self.color_map.get(color_key, Fore.WHITE)
+                for char in chars:
+                    line.append((char, color))
+            processed_grid.append(line)
+        return processed_grid
+
+    def _process_single_color_art(self, art_tuple):
+        """Converts a simple tuple of strings into a drawable grid."""
+        processed_grid = []
+        for line_str in art_tuple:
+            line = []
+            for char in line_str:
+                line.append((char, self.base_color))
+            processed_grid.append(line)
         return processed_grid
 
     def _init_position_and_speed(self):
-        """Sets the initial position and speed of the fish."""
         if not hasattr(self, 'art') or not self.art:
              self.art = [[('?', Fore.RED)]]
 

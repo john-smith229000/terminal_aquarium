@@ -1,7 +1,7 @@
 import random
 import math
 from fish import Fish
-from ascii_art import FISH_ART_STYLES, FISH_COLOR_SETS
+from ascii_art import FISH_ART_STYLES
 from config import (
     FRAME_RATE, PUFFER_NORMAL_SPEED_RANGE, PUFFER_STATE_DURATION,
     PUFFER_PUFF_ANIMATION_SPEED, PUFFER_SWIM_ANIMATION_SPEED
@@ -10,61 +10,58 @@ from config import (
 class PufferFish(Fish):
     """
     Represents a PufferFish that inherits from Fish but has unique behavior.
-    It swims slowly and puffs up into an animated state when startled.
     """
+
     def __init__(self, width, height, background_color, aquarium_manager):
-        #parent
+        # --- MODIFIED: Set unique properties BEFORE calling the parent __init__ ---
+        self.fish_type = 'puffer'
+        self.category = 'puffer' # The category in ascii_art.py
+        # --- END MODIFICATION ---
+
+        # Now, call the parent initializer. It will use the properties we just set
+        # to correctly select and process the art and color.
         super().__init__(width, height, background_color)
         self.aquarium_manager = aquarium_manager
 
-        # --- Override specific PufferFish attributes ---
-        self.fish_type = 'puffer'
-        self.base_color = random.choice(FISH_COLOR_SETS[self.fish_type])
-
-        # Store all animation frames from ascii_art.py
-        self.puff_frames = [art for _, art in FISH_ART_STYLES['puffer'][self.direction]]
-        self.swim_frames = [art for _, art in FISH_ART_STYLES['puffer'][f"{self.direction}_swim"]]
-
-        # Set the initial art to the smallest frame
+        # --- MODIFIED: The parent now handles base color correctly. ---
+        # We just need to process our specific animation frames using the
+        # consistent base_color that the parent has already chosen for us.
+        raw_puff_frames = [art for _, art in FISH_ART_STYLES['puffer'][self.direction]]
+        raw_swim_frames = [art for _, art in FISH_ART_STYLES['puffer'][f"{self.direction}_swim"]]
+        
+        self.puff_frames = [self._process_single_color_art(frame) for frame in raw_puff_frames]
+        self.swim_frames = [self._process_single_color_art(frame) for frame in raw_swim_frames]
+        
+        # Set the initial art to the first processed frame
         self.art = self.puff_frames[0]
+        # --- END MODIFICATION ---
 
-        # Slower speed than normal fish
+        # Override speed and set up state machine
         self.normal_speed = random.uniform(*PUFFER_NORMAL_SPEED_RANGE)
         self.speed = self.normal_speed if self.direction == 'forward' else -self.normal_speed
-
-        # State management for puffing behavior
         self.state = 'normal'
         self.animation_frame_index = 0
         self.animation_timer = 0.0
         self.puffed_duration_timer = 0.0
 
         # Sine wave movement attributes
-        self.wave_amplitude = random.uniform(4.0, 6.0)
-        self.wave_frequency = random.uniform(0.01, 0.04)
+        self.wave_amplitude = random.uniform(1.0, 3.0)
+        self.wave_frequency = random.uniform(0.1, 0.3)
         
-        # --- MODIFIED: Override Y position to prevent floor clipping ---
-        # This is a tweakable range to ensure the sine wave motion is safe.
+        # Override Y position to prevent floor clipping
+        self.art_height = len(self.art)
         safe_top_margin = int(self.wave_amplitude) + 1
-        safe_bottom_margin = int(self.wave_amplitude) + self.art_height + 14 # +2 for floor & buffer
-
-        # Define the valid spawn range for the center of the wave
-        min_y = safe_top_margin
-        max_y = height - safe_bottom_margin
-
-        # Failsafe for very small terminal windows where the range might be invalid
-        if min_y >= max_y:
-            min_y, max_y = height // 2, height // 2
-        
-        # Set the new, safe Y position
+        safe_bottom_margin = int(self.wave_amplitude) + self.art_height + 2
+        min_y, max_y = safe_top_margin, height - safe_bottom_margin
+        if min_y >= max_y: min_y, max_y = height // 2, height // 2
         self.y = random.randint(min_y, max_y)
-        self.center_y = self.y  # The central line for the wave is now this safe Y
-        # --- END MODIFICATION ---
+        self.center_y = self.y
 
     def update(self):
         """
         Overrides the base Fish update method to handle state-based animation.
         """
-        # --- State Machine Logic ---
+        # State Machine Logic
         if self.state == 'puffing':
             self.animation_timer += FRAME_RATE
             if self.animation_timer >= PUFFER_PUFF_ANIMATION_SPEED:
@@ -102,12 +99,10 @@ class PufferFish(Fish):
         else:
             self.art = self.puff_frames[self.animation_frame_index]
 
-        # --- Movement Logic ---
+        # Movement Logic
         if self.state in ['normal', 'puffed']:
             self.x += self.speed
             self.speed = self.normal_speed if self.direction == 'forward' else -self.normal_speed
-            
-            # Sine wave vertical movement
             offset = self.wave_amplitude * math.sin(self.x * self.wave_frequency)
             self.y = self.center_y + offset
         else:
@@ -115,7 +110,7 @@ class PufferFish(Fish):
 
         # Update art dimensions for wrapping logic
         self.art_height = len(self.art)
-        self.art_width = max(len(line) for line in self.art) if self.art else 0
+        self.art_width = max(len(line) for line in self.art) if self.art and self.art[0] else 1
 
         # Handle screen wrapping
         if self.speed > 0 and self.x >= self.width:
@@ -125,7 +120,7 @@ class PufferFish(Fish):
 
     def startle(self):
         """
-        Overrides the base Fish startle method to trigger the puffing animation.
+        Overrides the base Fish startle method to trigger the puffing animation and sound.
         """
         if self.state == 'normal':
             self.aquarium_manager.play_puffer_sound()
