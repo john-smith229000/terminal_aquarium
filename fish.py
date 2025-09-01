@@ -1,6 +1,6 @@
 import random
 import math
-from colorama import Fore, Back
+from colorama import Fore, Back, Style
 from ascii_art import FISH_ART_STYLES, FISH_COLOR_SETS, COLOR_ADJUSTMENTS
 from config import (
     NORMAL_SPEED_RANGE, FAST_SPEED_RANGE, FAST_FISH_PROBABILITY,
@@ -20,7 +20,7 @@ class Fish:
         self._init_art_and_color()
         self._init_position_and_speed()
         
-        self.state = 'swimming' # swimming, seeking
+        self.state = 'swimming'
         self.target_food = None
         
         self.is_startled = False
@@ -28,29 +28,78 @@ class Fish:
         self.peak_startle_speed = 0.0
 
     def _init_art_and_color(self):
-        """Initializes the fish's appearance, storing both forward and backward art."""
-        spawn_chance = random.random()
-        if spawn_chance < 0.02: category = 'multi_line_large'
-        elif spawn_chance < 0.30: category = 'multi_line_small'
-        else: category = 'single_line'
+        """
+        Initializes art and color, processing it into a ready-to-draw format.
+        This new logic is more direct and robust against data format errors.
+        """
+        try:
+            spawn_chance = random.random()
+            if spawn_chance < 0.02: category = 'multi_line_large'
+            elif spawn_chance < 0.30: category = 'multi_line_small'
+            else: category = 'single_line'
 
-        forward_arts = FISH_ART_STYLES[category]['forward']
-        backward_arts = FISH_ART_STYLES[category]['backward']
+            forward_arts = FISH_ART_STYLES[category]['forward']
+            backward_arts = FISH_ART_STYLES[category]['backward']
+            
+            idx = random.randint(0, len(forward_arts) - 1)
+            self.fish_type, forward_template = forward_arts[idx]
+            
+            if idx < len(backward_arts):
+                _, backward_template = backward_arts[idx]
+            else:
+                backward_template = forward_template
+
+            # Process both art templates into a final, drawable format.
+            self.forward_art = self._process_art(forward_template)
+            self.backward_art = self._process_art(backward_template)
+            
+            self.art = self.forward_art if self.direction == 'forward' else self.backward_art
+
+        except Exception as e:
+            print(f"{Fore.RED}Critical Error initializing fish '{getattr(self, 'fish_type', 'unknown')}': {e}{Style.RESET_ALL}")
+            self.art = [[('X', Fore.RED)]] # Failsafe art
+
+    def _process_art(self, template):
+        """
+        A unified function to process any art template into a drawable grid.
+        """
+        processed_grid = []
+        color_data = FISH_COLOR_SETS.get(self.fish_type, [Fore.WHITE])
+        is_multicolor_dict = isinstance(template, dict)
         
-        idx = random.randint(0, len(forward_arts) - 1)
-        self.fish_type, self.forward_art = forward_arts[idx]
-        _, self.backward_art = backward_arts[idx]
-
-        if isinstance(self.forward_art, str): self.forward_art = (self.forward_art,)
-        if isinstance(self.backward_art, str): self.backward_art = (self.backward_art,)
-
-        self.art = self.forward_art if self.direction == 'forward' else self.backward_art
-        self.base_color = random.choice(FISH_COLOR_SETS[self.fish_type])
+        if is_multicolor_dict:
+            # RLE multi-color format
+            color_map = {}
+            if isinstance(color_data, dict):
+                for key, colors in color_data.items():
+                    color_map[key] = random.choice(colors)
+            
+            for line_template in template['art']:
+                line = []
+                for color_key, chars in line_template:
+                    color = color_map.get(color_key, Fore.WHITE)
+                    for char in chars:
+                        line.append((char, color))
+                processed_grid.append(line)
+        else:
+            # Single-color format (string or tuple of strings)
+            base_color = random.choice(color_data)
+            art_tuple = (template,) if isinstance(template, str) else template
+            for line_str in art_tuple:
+                line = []
+                for char in line_str:
+                    line.append((char, base_color))
+                processed_grid.append(line)
+        
+        return processed_grid
 
     def _init_position_and_speed(self):
         """Sets the initial position and speed of the fish."""
+        if not hasattr(self, 'art') or not self.art:
+             self.art = [[('?', Fore.RED)]]
+
         self.art_height = len(self.art)
-        self.art_width = max(len(line) for line in self.art) if self.art else 0
+        self.art_width = max(len(line) for line in self.art) if self.art and self.art[0] else 1
         self.x = float(random.randint(0, self.width - 1))
         self.y = random.randint(1, self.height - self.art_height - 3)
 
@@ -58,7 +107,6 @@ class Fish:
             self.normal_speed = random.uniform(*NORMAL_SPEED_RANGE)
         else:
             self.normal_speed = random.uniform(*FAST_SPEED_RANGE)
-
         self.speed = self.normal_speed if self.direction == 'forward' else -self.normal_speed
 
     def turn_around(self):
@@ -71,8 +119,7 @@ class Fish:
             self.direction = 'forward'
             self.art = self.forward_art
             self.speed = abs(self.speed)
-        
-        self.art_width = max(len(line) for line in self.art) if self.art else 0
+        self.art_width = max(len(line) for line in self.art) if self.art and self.art[0] else 1
 
     def seek_food(self, food_pellet):
         """Assigns a food pellet and triggers the seeking state with a speed boost."""
@@ -158,34 +205,39 @@ class Fish:
             self.speed = self.peak_startle_speed if self.direction == 'forward' else -self.peak_startle_speed
 
     def get_adjusted_color(self, color):
-        """Adjusts color based on current background mode."""
+        """Adjusts a single color based on the current background mode."""
         if self.background_color == Back.LIGHTCYAN_EX:
             return COLOR_ADJUSTMENTS.get('light_mode', {}).get(color, color)
         return color
 
-    def get_current_color(self):
-        """Gets the current color adjusted for background mode."""
-        return self.get_adjusted_color(self.base_color)
-
-    def get_art_with_colors(self):
-        """Returns the art with color information for drawing."""
-        single_color = self.get_current_color()
-        colored_art = []
+    def get_current_processed_art(self):
+        """Returns the pre-processed art with colors adjusted for the current background."""
+        adjusted_art = []
         for line in self.art:
-            colored_line = [(char, single_color) for char in line]
-            colored_art.append(colored_line)
-        return colored_art
-        
+            adjusted_line = []
+            if line:
+                for item in line:
+                    # Defensive check to prevent crashes on malformed data
+                    if isinstance(item, tuple) and len(item) == 2:
+                        char, color = item
+                        adjusted_line.append((char, self.get_adjusted_color(color)))
+            adjusted_art.append(adjusted_line)
+        return adjusted_art
+
     def draw(self, buffer):
-        """Draws the fish onto the provided scene buffer."""
+        """Draws the pre-processed fish art onto the scene buffer."""
         x, y = int(self.x), int(self.y)
-        colored_art = self.get_art_with_colors()
+        processed_art_for_drawing = self.get_current_processed_art()
         
-        for line_idx, line_data in enumerate(colored_art):
+        for line_idx, line_data in enumerate(processed_art_for_drawing):
             current_y = y + line_idx
             if 0 <= current_y < self.height:
-                for char_idx, (char_art, color) in enumerate(line_data):
-                    current_x = x + char_idx
-                    if char_art != ' ' and 0 <= current_x < self.width:
-                        buffer[current_y][current_x] = (char_art, color)
+                for char_idx, item in enumerate(line_data):
+                    # --- NEW: Final failsafe to prevent crashes ---
+                    if isinstance(item, tuple) and len(item) == 2:
+                        char_art, color = item
+                        current_x = x + char_idx
+                        if char_art != ' ' and 0 <= current_x < self.width:
+                            buffer[current_y][current_x] = (char_art, color)
+          
 

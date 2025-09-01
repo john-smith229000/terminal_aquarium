@@ -95,7 +95,11 @@ FISH_COLOR_SETS = {
     'exotic': [Fore.MAGENTA, Fore.LIGHTMAGENTA_EX, Fore.RED],
     'common': [Fore.GREEN, Fore.BLUE, Fore.CYAN],
     'marlin': [Fore.BLUE, Fore.CYAN, Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX],
-    'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE, Fore.LIGHTMAGENTA_EX]
+    'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE, Fore.LIGHTMAGENTA_EX],
+    'test': {
+        'body': [Fore.BLUE],
+        'fin': [Fore.YELLOW],
+    }
 }
 
 # Color adjustments for light mode (colors that don't show well on light backgrounds)
@@ -123,14 +127,6 @@ FISH_ART_STYLES = {
             ('goldfish', ">-oO>"),
             ('angelfish', "><(((°>"),
             ('exotic', "><(((°>"),
-            # EXAMPLE of multi-color fish format:
-            # ('angelfish', {
-            #     'art': [
-            #         [('>', 'body_color'), ('<', 'body_color'), ('(', 'tail_color'), 
-            #          ('(', 'tail_color'), ('(', 'tail_color'), ('°', 'eye_color'), ('>', 'tail_color')]
-            #     ],
-            #     'color_keys': ['body_color', 'tail_color', 'eye_color']
-            # }),
         ],
         'backward': [
             ('tropical_basic', "<><"),
@@ -169,7 +165,8 @@ FISH_ART_STYLES = {
                 ">        |", 
                 "\\ <)   /\\|", 
                 " \\----'\\", 
-                "  \\____/")),
+                "  \\____/"
+                )),
             ('common', (
                 "  __////  /|",
                 " / o   \\_/ |",
@@ -177,16 +174,16 @@ FISH_ART_STYLES = {
                 "\\___+__/ \\ |",
                 "    \\|    \\|"
                 )),
-            # EXAMPLE of multi-color format for multi-line fish:
-            # ('tropical_bright', {
-            #     'art': [
-            #         [(' ', 'transparent'), ('/', 'fin_color')],
-            #         [('/', 'body_color'), ('\\', 'body_color'), ('/', 'fin_color')],
-            #         [('\\', 'body_color'), ('/', 'body_color'), ('\\', 'fin_color')],
-            #         [(' ', 'transparent'), ('\\', 'fin_color'), (' ', 'transparent')]
-            #     ],
-            #     'color_keys': ['body_color', 'fin_color']
-            # }),
+            ('test', {
+                'art' : [
+                [('fin',"  __////  /|")],
+                [('body', " / o   \\"),('fin',"_/ |")],
+                [('body',"_> ))    _"),('fin'," <")],
+                [('body',"\\___+__/"),('fin'," \\ |")],
+                [('fin',"    \\|    \\|")],
+                ],
+                'color_keys':['body','fin']
+                }),
         ],
         'forward': [
             ('tropical_bright', (
@@ -221,8 +218,18 @@ FISH_ART_STYLES = {
                 "> _    (( <_", 
                 "| / \\__+___/", 
                 "|/     |/"
-                ))
-        ]
+                )),
+            ('test', {
+                'art' : [
+                [('fin',"  __////  /|")],
+                [('body', " / o   \\"),('fin',"_/ |")],
+                [('body',"_> ))    _"),('fin'," <")],
+                [('body',"\\___+__/"),('fin'," \\ |")],
+                [('fin',"    \\|    \\|")],
+                ],
+                'color_keys':['body','fin'],
+                }),
+        ],
     },
     'multi_line_large': {
         'backward': [
