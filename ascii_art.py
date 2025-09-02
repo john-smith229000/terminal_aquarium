@@ -96,7 +96,7 @@ FISH_COLOR_SETS = {
     'common': [Fore.GREEN, Fore.BLUE, Fore.CYAN],
     'seahorse': [Fore.LIGHTYELLOW_EX, Fore.YELLOW, Fore.WHITE, Fore.LIGHTCYAN_EX, Fore.LIGHTBLACK_EX, Fore.LIGHTRED_EX],
     'marlin': [Fore.BLUE, Fore.CYAN, Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX],
-    'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE, Fore.LIGHTMAGENTA_EX],
+    'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE],
     'blue_tang': {
         'body': [Fore.BLUE],
         'fin': [Fore.YELLOW, Fore.LIGHTGREEN_EX, Fore.LIGHTRED_EX, Fore.LIGHTYELLOW_EX],
