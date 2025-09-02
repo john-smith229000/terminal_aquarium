@@ -94,7 +94,7 @@ FISH_COLOR_SETS = {
     'angelfish': [Fore.WHITE, Fore.LIGHTCYAN_EX, Fore.CYAN],
     'exotic': [Fore.MAGENTA, Fore.LIGHTMAGENTA_EX, Fore.RED],
     'common': [Fore.GREEN, Fore.BLUE, Fore.CYAN],
-    'seahorse': [Fore.LIGHTYELLOW_EX],
+    'seahorse': [Fore.LIGHTYELLOW_EX, Fore.YELLOW, Fore.WHITE, Fore.LIGHTCYAN_EX, Fore.LIGHTBLACK_EX, Fore.LIGHTRED_EX],
     'marlin': [Fore.BLUE, Fore.CYAN, Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX],
     'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE, Fore.LIGHTMAGENTA_EX],
     'blue_tang': {
@@ -446,6 +446,22 @@ FISH_ART_STYLES = {
                 """       `-.-`""",  
             )),
         ],
+        'baby_backward': [
+            ('seahorse',(
+                """  _,""",
+                """ /.\\""", 
+                """' (<}""",
+                """,_))'""",
+                """ '"'""", 
+            )),
+            ('seahorse',(
+                """  _,""",
+                """ /.\\""", 
+                """' (< }""",
+                """,_))'""",
+                """ '"'""", 
+            )),
+        ],
         'forward': [
             ('seahorse',(
                 """      _cC.__""",
@@ -486,7 +502,22 @@ FISH_ART_STYLES = {
 
             )),
         ],
-
+        'baby_forward': [
+            ('seahorse',(
+                """  ,_""",
+                """  /.\\""",
+                """{ >) `""",
+                """ `((_,""",
+                """ `"`""",
+            )),
+            ('seahorse',(
+                """  ,_""",
+                """  /.\\""",
+                """ {>) `""",
+                """ `((_,""",
+                """ `"`""",
+            )),
+        ],
     },
 }
 

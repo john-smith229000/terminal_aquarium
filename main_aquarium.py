@@ -11,7 +11,7 @@ import atexit
 from jellyfish_module import Jellyfish
 from fish import Fish
 from puffer import PufferFish
-from seahorse import Seahorse
+from seahorse import Seahorse, BabySeahorse
 from school import School
 from crab import Crab
 from bubble import Bubble, ClickBubble
@@ -114,9 +114,19 @@ class Aquarium:
             self.fishes.append(PufferFish(self.width, self.height, self.current_background, self))
             num_fish -= 1
         # Add seahorse spawn chance
+        # Add seahorse spawn chance
         if num_fish > 0 and random.random() < SEAHORSE_SPAWN_CHANCE:
-            self.fishes.append(Seahorse(self.width, self.height, self.current_background))
+            adult_seahorse = Seahorse(self.width, self.height, self.current_background)
+            self.fishes.append(adult_seahorse)
             num_fish -= 1
+            
+            # Spawn baby seahorses with the adult
+            from seahorse import BabySeahorse
+            baby_seahorses = adult_seahorse.spawn_babies()
+            for baby in baby_seahorses:
+                if num_fish > 0:
+                    self.fishes.append(baby)
+                    num_fish -= 1
         for _ in range(num_fish):
             self.fishes.append(Fish(self.width, self.height, self.current_background))
         self.schools = [School(self.width, self.height, self.current_background) for _ in range(num_schools)]
@@ -428,7 +438,7 @@ class Aquarium:
         pellet = self.food_pellets[0]
         
         for fish in self.fishes:
-            if isinstance(fish, PufferFish): continue
+            if isinstance(fish, (PufferFish, BabySeahorse, Seahorse)): continue
             
             dist = math.sqrt((fish.x - pellet.x)**2 + (fish.y - pellet.y)**2)
             if dist < FOOD_NOTICE_RADIUS:
