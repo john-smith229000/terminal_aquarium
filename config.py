@@ -42,7 +42,7 @@ SEAHORSE_ANIMATION_SPEED = 0.03  # Time between animation frames
 SEAHORSE_SPAWN_CHANCE = 0.15  # 15% chance for a seahorse to spawn
 BABY_SEAHORSE_SPAWN_CHANCE = 0.55  # 70% chance for babies when adult spawns
 BABY_SEAHORSE_COUNT_RANGE = (2, 4)  # Number of babies to spawn
-BABY_SEAHORSE_FOLLOW_DISTANCE = 7.0  # How close babies stay to parent
+BABY_SEAHORSE_FOLLOW_DISTANCE = 6.0  # How close babies stay to parent
 BABY_SEAHORSE_WAVE_AMPLITUDE_RANGE = (0.8, 1.2)  # Smaller wave motion
 BABY_SEAHORSE_SPEED_RANGE = (0.5, 0.65)  # Faster than adults
 
