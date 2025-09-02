@@ -93,6 +93,7 @@ FISH_COLOR_SETS = {
     'goldfish': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.RED],
     'angelfish': [Fore.WHITE, Fore.LIGHTCYAN_EX, Fore.CYAN],
     'exotic': [Fore.MAGENTA, Fore.LIGHTMAGENTA_EX, Fore.RED],
+    'exotic2': [Fore.MAGENTA, Fore.LIGHTMAGENTA_EX, Fore.RED],
     'common': [Fore.GREEN, Fore.BLUE, Fore.CYAN],
     'seahorse': [Fore.LIGHTYELLOW_EX, Fore.YELLOW, Fore.WHITE, Fore.LIGHTCYAN_EX, Fore.LIGHTBLACK_EX, Fore.LIGHTRED_EX],
     'marlin': {
@@ -130,6 +131,7 @@ FISH_ART_STYLES = {
             ('deep_sea', ">-oO>"),
             ('goldfish', ">-oO>"),
             ('angelfish', "><(((°>"),
+            ('exotic', "><(((°>"),
             ('exotic', "><(((°>"),
         ],
         'backward': [
@@ -189,6 +191,16 @@ FISH_ART_STYLES = {
                 ],
                 'color_keys':['body','fin']
                 }),
+            ('exotic2', (
+                """        _,;_;/-",_""",
+                """     ,")  (  (( ) "  .`,""",
+                """   ,` (    )  ;  -.,/;`}""",
+                """ ,"  o    (  ( (  . -_-.""",
+                """`.  ;      ;  ) ) \\`; \\;""",
+                """  `., )   (  ( _-`   \\,'""",
+                """     "`'-,,`.""",
+            )),
+
         ],
         'forward': [
             ('tropical_bright', (
@@ -226,14 +238,23 @@ FISH_ART_STYLES = {
                 )),
             ('blue_tang', {
                 'art' : [
-                [('fin',"|\  \\\\\\\\__  ")],
-                [('fin',"| \_"),('body',"/   o \\")],
-                [('fin',"> "),('body',"_    (( <_")],
-                [('fin',"| / "),('body',"\__+___/")],
-                [('fin',"|/    |/    ")],
+                    [('fin',"|\  \\\\\\\\__  ")],
+                    [('fin',"| \_"),('body',"/   o \\")],
+                    [('fin',"> "),('body',"_    (( <_")],
+                    [('fin',"| / "),('body',"\__+___/")],
+                    [('fin',"|/    |/    ")],
                 ],
                 'color_keys':['body','fin'],
                 }),
+            ('exotic2', (
+                """     _,"-\\;_;,_        """,
+                """,'.  " ( ))  )  (",     """,            
+                """{';\\,.-  ;  (    ) ',   """,            
+                """.-_- .  ) )  )    o  ", """,           
+                """;/ ;'/ ( (  ;      ;  .'""",            
+                """`,/   '-_ )  )   ( ,.'  """,            
+                        """.',,-`'"     """,                  
+            ))
         ],
     },
     'multi_line_large': {
