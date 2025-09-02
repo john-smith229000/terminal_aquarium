@@ -12,8 +12,8 @@ NUM_SEAWEED = random.randint(10, 15)
 NUM_SCHOOLS = random.randint(1, 2)
 CRAB_SPAWN_CHANCE = 5.0  # 50% chance to spawn a crab
 DECORATION_SPAWN_CHANCE = 0.6  # 60% chance to spawn decorations
-MAX_DECORATIONS = 3  # Maximum decorations at once
-PUFFER_SPAWN_CHANCE = 1.0 # 30% chance for a puffer fish to spawn
+MAX_DECORATIONS = 4  # Maximum decorations at once
+PUFFER_SPAWN_CHANCE = 0.3 # 30% chance for a puffer fish to spawn
 
 # --- Animation Parameters ---
 FRAME_RATE = 0.1  # Seconds per frame

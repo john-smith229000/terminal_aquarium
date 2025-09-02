@@ -51,7 +51,7 @@ class PufferFish(Fish):
         # Override Y position to prevent floor clipping
         self.art_height = len(self.art)
         safe_top_margin = int(self.wave_amplitude) + 1
-        safe_bottom_margin = int(self.wave_amplitude) + self.art_height + 2
+        safe_bottom_margin = int(self.wave_amplitude) + self.art_height + 11
         min_y, max_y = safe_top_margin, height - safe_bottom_margin
         if min_y >= max_y: min_y, max_y = height // 2, height // 2
         self.y = random.randint(min_y, max_y)

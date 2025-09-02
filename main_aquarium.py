@@ -299,11 +299,27 @@ class Aquarium:
             self.sound.play(loops=-1)  # loops=-1 means loop forever
         else:
             self.sound.stop()
+    
+    def check_terminal_resize(self):
+        #Checks if terminal size has changed and updates accordingly.
+        try:
+            new_width, new_height = os.get_terminal_size()
+            if new_width != self.width or new_height != self.height:
+                self.width, self.height = new_width, new_height
+                # Regenerate scene with new dimensions
+                self.generate_new_scene()
+                return True
+        except OSError:
+            pass
+        return False
 
     def run(self):
         """Starts the main animation loop."""
         try:
             while True:
+                if self.time_step % 10 == 0:  # Check every 10 frames
+                    self.check_terminal_resize()
+
                 input_result = self.get_char_input()
                 if input_result:
                     # --- MODIFIED: Restructure input handling ---
@@ -317,8 +333,23 @@ class Aquarium:
                             self.current_background = self.original_background
                     elif input_result.lower() == 's':
                         self.toggle_sound()
-                    elif input_result == 'ESC'or input_result == 'q':
+                    elif input_result == 'ESC' or input_result == 'q':
+                        if self.sound_on and self.sound:
+                            self.sound.stop()
+                        pygame.mixer.quit()
                         print(f"{Style.RESET_ALL}\nThanks for visiting the aquarium!")
+                        print("Press any key to close the terminal...")
+                        
+                        # Restore terminal settings before waiting
+                        self.input_handler.cleanup()
+                        
+                        # Wait for user input before closing
+                        if sys.platform == "win32":
+                            import msvcrt
+                            msvcrt.getch()
+                        else:
+                            input()  # Simple blocking input
+                        
                         pygame.mixer.quit()
                         sys.exit(0)
                     
@@ -341,7 +372,22 @@ class Aquarium:
                 self.draw()
                 time.sleep(FRAME_RATE)
         except KeyboardInterrupt:
+            if self.sound_on and self.sound:
+                self.sound.stop()
+            pygame.mixer.quit()
             print(f"{Style.RESET_ALL}\nThanks for visiting the aquarium!")
+            print("Press any key to close the terminal...")
+            
+            # Restore terminal settings
+            self.input_handler.cleanup()
+            
+            # Wait for user input
+            if sys.platform == "win32":
+                import msvcrt
+                msvcrt.getch()
+            else:
+                input()
+            
             pygame.mixer.quit()
             sys.exit(0)
 

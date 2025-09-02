@@ -96,9 +96,9 @@ FISH_COLOR_SETS = {
     'common': [Fore.GREEN, Fore.BLUE, Fore.CYAN],
     'marlin': [Fore.BLUE, Fore.CYAN, Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX],
     'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE, Fore.LIGHTMAGENTA_EX],
-    'test': {
+    'blue_tang': {
         'body': [Fore.BLUE],
-        'fin': [Fore.YELLOW],
+        'fin': [Fore.YELLOW, Fore.LIGHTGREEN_EX, Fore.LIGHTRED_EX, Fore.LIGHTYELLOW_EX],
     }
 }
 
@@ -174,7 +174,7 @@ FISH_ART_STYLES = {
                 "\\___+__/ \\ |",
                 "    \\|    \\|"
                 )),
-            ('test', {
+            ('blue_tang', {
                 'art' : [
                 [('fin',"  __////  /|")],
                 [('body', " / o   \\"),('fin',"_/ |")],
@@ -220,7 +220,7 @@ FISH_ART_STYLES = {
                 "| / \\__+___/", 
                 "|/     |/"
                 )),
-            ('test', {
+            ('blue_tang', {
                 'art' : [
                 [('fin',"|\  \\\\\\\\__  ")],
                 [('fin',"| \_"),('body',"/   o \\")],
