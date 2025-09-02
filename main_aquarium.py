@@ -11,6 +11,7 @@ import atexit
 from jellyfish_module import Jellyfish
 from fish import Fish
 from puffer import PufferFish
+from seahorse import Seahorse
 from school import School
 from crab import Crab
 from bubble import Bubble, ClickBubble
@@ -111,6 +112,10 @@ class Aquarium:
         if random.random() < PUFFER_SPAWN_CHANCE:
             # --- MODIFIED: Pass 'self' to the PufferFish ---
             self.fishes.append(PufferFish(self.width, self.height, self.current_background, self))
+            num_fish -= 1
+        # Add seahorse spawn chance
+        if num_fish > 0 and random.random() < SEAHORSE_SPAWN_CHANCE:
+            self.fishes.append(Seahorse(self.width, self.height, self.current_background))
             num_fish -= 1
         for _ in range(num_fish):
             self.fishes.append(Fish(self.width, self.height, self.current_background))

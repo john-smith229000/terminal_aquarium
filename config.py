@@ -36,6 +36,11 @@ PUFFER_STATE_DURATION = 10.0  # How long it stays puffed (in seconds)
 PUFFER_PUFF_ANIMATION_SPEED = 0.6  # Time between each puff/deflate frame
 PUFFER_SWIM_ANIMATION_SPEED = 0.15  # Time between swim frames while puffed
 
+# Seahorse Behavior Parameters
+SEAHORSE_NORMAL_SPEED_RANGE = (0.3, 0.6)  # Slower than regular fish
+SEAHORSE_ANIMATION_SPEED = 0.03  # Time between animation frames
+SEAHORSE_SPAWN_CHANCE = 1.0  # 15% chance for a seahorse to spawn
+
 # --- Food Mechanic Parameters ---
 FOOD_SINK_SPEED = 0.5  # Cells per frame
 FOOD_LIFETIME = 4.0   # Seconds
