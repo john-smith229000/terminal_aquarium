@@ -39,7 +39,7 @@ PUFFER_SWIM_ANIMATION_SPEED = 0.15  # Time between swim frames while puffed
 # Seahorse Behavior Parameters
 SEAHORSE_NORMAL_SPEED_RANGE = (0.3, 0.6)  # Slower than regular fish
 SEAHORSE_ANIMATION_SPEED = 0.03  # Time between animation frames
-SEAHORSE_SPAWN_CHANCE = 0.15  # 15% chance for a seahorse to spawn
+SEAHORSE_SPAWN_CHANCE = 0.15 # 15% chance for a seahorse to spawn
 BABY_SEAHORSE_SPAWN_CHANCE = 0.55  # 70% chance for babies when adult spawns
 BABY_SEAHORSE_COUNT_RANGE = (2, 4)  # Number of babies to spawn
 BABY_SEAHORSE_FOLLOW_DISTANCE = 6.0  # How close babies stay to parent

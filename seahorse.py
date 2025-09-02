@@ -3,9 +3,9 @@ import math
 from fish import Fish
 from ascii_art import FISH_ART_STYLES
 from config import (
-    FRAME_RATE, SEAHORSE_NORMAL_SPEED_RANGE, SEAHORSE_ANIMATION_SPEED, 
+    FRAME_RATE, SEAHORSE_NORMAL_SPEED_RANGE, SEAHORSE_ANIMATION_SPEED,
     SEAHORSE_SPAWN_CHANCE, BABY_SEAHORSE_SPAWN_CHANCE, BABY_SEAHORSE_COUNT_RANGE,
-    BABY_SEAHORSE_FOLLOW_DISTANCE, BABY_SEAHORSE_WAVE_AMPLITUDE_RANGE, 
+    BABY_SEAHORSE_FOLLOW_DISTANCE, BABY_SEAHORSE_WAVE_AMPLITUDE_RANGE,
     BABY_SEAHORSE_SPEED_RANGE
 )
 
@@ -100,6 +100,22 @@ class Seahorse(Fish):
         
         # Update art for new direction
         self._update_art_frame()
+    
+    def startle(self):
+        """
+        Seahorses are gentle and don't get as startled as other fish.
+        """
+        if not self.is_startled:
+            self.is_startled = True
+            self.startle_timer = 1.2  # Gentle startle duration
+            # A smaller speed boost when startled
+            startle_multiplier = random.uniform(1.5, 2.0)
+            self.peak_startle_speed = abs(self.normal_speed * startle_multiplier)
+            self.speed = self.peak_startle_speed if self.direction == 'forward' else -self.peak_startle_speed
+            
+        # Reset seeking state if startled
+        self.state = 'swimming'
+        self.target_food = None
 
     def update(self):
         """
@@ -232,8 +248,14 @@ class BabySeahorse(Fish):
             target_x = self.parent.x + self.offset_x
             target_y = self.parent.center_y + self.offset_y
             
-            # Gently move toward target position
+            # Calculate the shortest horizontal distance, accounting for screen wrap
             x_diff = target_x - self.x
+            if x_diff > self.width / 2:
+                x_diff -= self.width  # Shorter to wrap by going left
+            elif x_diff < -self.width / 2:
+                x_diff += self.width  # Shorter to wrap by going right
+            
+            # Calculate vertical distance
             y_diff = target_y - self.center_y
             
             # Follow parent's direction generally but with some independence
@@ -279,7 +301,7 @@ class BabySeahorse(Fish):
             self.is_startled = True
             self.startle_timer = 0.8  # Shorter startle duration than adults
             # Babies get more startled
-            startle_multiplier = random.uniform(3.0, 4.0)  
+            startle_multiplier = random.uniform(6.0, 9.0)  
             self.peak_startle_speed = abs(self.normal_speed * startle_multiplier)
             self.speed = self.peak_startle_speed if self.direction == 'forward' else -self.peak_startle_speed
             
