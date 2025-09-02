@@ -6,6 +6,8 @@ from colorama import Back
 # --- Scene Generation Parameters ---
 MIN_FISH = 15
 MAX_FISH = 40
+MED_FISH_CHANCE = 0.3
+LARGE_FISH_CHANCE = 0.02
 NUM_BUBBLES = 20
 NUM_JELLYFISH = random.randint(0, 4)
 NUM_SEAWEED = random.randint(10, 15)

@@ -5,7 +5,7 @@ from ascii_art import FISH_ART_STYLES, FISH_COLOR_SETS, COLOR_ADJUSTMENTS
 from config import (
     NORMAL_SPEED_RANGE, FAST_SPEED_RANGE, FAST_FISH_PROBABILITY,
     STARTLE_MULTIPLIER_RANGE, STARTLE_DURATION, FRAME_RATE,
-    FOOD_SEEK_SPEED_MULTIPLIER
+    FOOD_SEEK_SPEED_MULTIPLIER, MED_FISH_CHANCE, LARGE_FISH_CHANCE
 )
 
 
@@ -34,8 +34,8 @@ class Fish:
     def _get_random_fish_details(self):
         """Selects a random category and fish type from that category."""
         spawn_chance = random.random()
-        if spawn_chance < 0.02: category = 'multi_line_large'
-        elif spawn_chance < 0.30: category = 'multi_line_small'
+        if spawn_chance < LARGE_FISH_CHANCE: category = 'multi_line_large'
+        elif spawn_chance <     MED_FISH_CHANCE: category = 'multi_line_small'
         else: category = 'single_line'
         
         arts_list = FISH_ART_STYLES[category]['forward']
