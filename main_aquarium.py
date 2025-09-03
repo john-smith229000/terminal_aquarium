@@ -14,6 +14,7 @@ from puffer import PufferFish
 from seahorse import Seahorse, BabySeahorse
 from school import School
 from crab import Crab
+from shark import Shark
 from bubble import Bubble, ClickBubble
 from seaweed import Seaweed
 from decoration import Decoration, generate_decorations
@@ -109,6 +110,16 @@ class Aquarium:
         
         # Create new objects
         self.fishes = []
+
+        self.shark = None
+        if Shark.should_spawn():
+            self.shark_will_spawn = True
+            # Set a random countdown timer for the shark to appear
+            self.shark_spawn_timer = random.randint(MIN_SHARK_SPAWN_DELAY, MAX_SHARK_SPAWN_DELAY)
+        else:
+            self.shark_will_spawn = False
+            self.shark_spawn_timer = 0
+
         if random.random() < PUFFER_SPAWN_CHANCE:
             # --- MODIFIED: Pass 'self' to the PufferFish ---
             self.fishes.append(PufferFish(self.width, self.height, self.current_background, self))
@@ -429,6 +440,17 @@ class Aquarium:
             jelly.update()
         if self.crab:
             self.crab.update()            
+        
+        if self.shark and self.shark.is_active():
+            self.shark.update()
+        elif self.shark and not self.shark.is_active():
+            self.shark = None
+        
+        if self.shark_will_spawn and not self.shark:
+            self.shark_spawn_timer -= 1 # Countdown each frame
+            if self.shark_spawn_timer <= 0:
+                self.shark = Shark(self.width, self.height, self.current_background, self)
+                self.shark_will_spawn = False # Ensure it only spawns once per scene
 
     def _notify_fish_of_food(self):
         """Finds all fish within a radius of the food and tells them to seek it."""
@@ -519,6 +541,9 @@ class Aquarium:
         # 6. Draw Fish
         for fish in self.fishes:
             fish.draw(buffer)
+        
+        if self.shark and self.shark.is_active():
+            self.shark.draw(buffer)
 
         # 7. Draw Crab (on seafloor, before ocean floor)
         if self.crab:
