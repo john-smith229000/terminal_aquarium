@@ -102,8 +102,8 @@ FISH_COLOR_SETS = {
     },
     'puffer': [Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.WHITE],
     'blue_tang': {
-        'body': [Fore.BLUE],
-        'fin': [Fore.YELLOW, Fore.LIGHTGREEN_EX, Fore.LIGHTRED_EX, Fore.LIGHTYELLOW_EX],
+        'body': [Fore.BLUE, Fore.LIGHTBLUE_EX],
+        'fin': [Fore.YELLOW, Fore.LIGHTGREEN_EX, Fore.LIGHTRED_EX],
     },
 }
 
@@ -250,7 +250,7 @@ FISH_ART_STYLES = {
                 """      ,"-\\;_;,__       """,
                 """,'.  / ( ))  )   ",     """,            
                 """{';\\,.-     (    ) ',   """,            
-                """.-_- .  ) )       o  ", """,           
+                """.-_- .  ) )      o  ", """,           
                 """;/ ;'/ ( (         ;   /""",            
                 """`,/   '-_    )     ,.'  """,            
                 '''        """.'---`'"     ''',                  
