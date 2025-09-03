@@ -1,9 +1,7 @@
 import random
 import math
 from colorama import Fore
-# These would be in your project's files
-# from ascii_art import COLOR_ADJUSTMENTS
-# from config import FRAME_RATE
+from perlin_noise import PerlinNoise
 
 # Mock objects for standalone execution
 class MockAscii:
@@ -19,26 +17,46 @@ class Eel:
     """
     
     def __init__(self, width, height, background_color):
+        # --- NEW Easy Tuning Parameters ---
+        # WAVELENGTH: Controls the length of the wave. Higher number = longer, stretched-out wave.
+        self.WAVELENGTH = 150.0
+        
+        # WAVE_SPEED: Controls the speed of the undulation. Higher number = faster wiggle.
+        self.WAVE_SPEED = 2.0
+        
+        # Amplitude: Controls the height of the waves (powerful at the neck, fading to the tail).
+        self.BASE_AMPLITUDE = 0.2
+        
+        # Variability: Controls the Perlin noise effect for a more organic feel.
+        self.NOISE_SPEED = 0.1      
+        self.AMP_VARIATION = 1.5    
+        # --- End of Tuning Parameters ---
+
         self.width = width
         self.height = height
         self.background_color = background_color
         
+        # This calculates the internal phase step needed to achieve the desired wavelength
+        self.wave_phase_step = (math.pi * 2) / self.WAVELENGTH
+
+        # Initialize Perlin noise generators
+        self.noise_amp = PerlinNoise(octaves=2, seed=random.randint(101, 200))
+        self.animation_time = 0
+
         self.head_art = {
             'forward': [
-                """      _       """,
-                """  _,-``_"`-._ """,
-                """.-`    (@)    \\""",
-                """      _.,,.,-'""",
-                """__--``"-\\;,_; """,
-                """`             """,
+                """  _       """,
+                """-'`_"`-._ """,
+                """   (@)   \\""",
+                """   _.,,.,-'""",
+                """-="-\\;,_; """,
             ],
             'backward':[
-                """       _""",
-                """ _.-'"_''-,_""" ,      
-                """/    (@)    ''-.""",
-                """`-,.,,._         """,      
-                """ ;_,;/-"''--__ """ ,
-                """             '""",
+                """      _""",
+                """ _.-'" _''-""" ,      
+                """/    (@)   '""",
+                """`-,.,,._   """,      
+                """ ;_,;/-"=-""" ,
             ],
         }        
         
@@ -56,30 +74,23 @@ class Eel:
         self.head_width = max(len(line) for line in self.head_art['forward'])
         self.head_height = len(self.head_art['forward'])
         
-        self.body_length = random.randint(30, 45)
+        self.body_length = random.randint(50, 65)
         self.body_segments = []
         
         self.direction = random.choice(['forward', 'backward'])
-        self.speed = random.uniform(0.4, 0.9)
+        self.speed = random.uniform(0.5, 1.0)
         self.normal_speed = self.speed
         
         self.base_head_y = random.randint(5, height - self.head_height - 10)
         self.head_x = float(random.randint(0, width - self.head_width))
         self.head_y = self.base_head_y
         self.prev_head_y = self.head_y
-        self.head_y_delta = 0 # Vertical change in head position per frame
+        self.head_y_delta = 0
 
-        self.head_wave_amplitude = random.uniform(0.0, 4.0)
-        self.head_wave_frequency = random.uniform(0.5, 0.6)
+        self.head_wave_amplitude = random.uniform(0.2, 1.0)
+        self.head_wave_frequency = random.uniform(0.04, 0.08)
         
         self._initialize_body()
-        
-        self.wave_amplitude = random.uniform(1.0, 3.0)
-        self.wave_frequency = random.uniform(2, 4)
-        self.wave_offset = random.uniform(0, math.pi * 2)
-        
-        self.update_counter = 0
-        self.segment_update_delay = 0 # Update every frame for smoothness
         
         self.is_startled = False
         self.startle_timer = 0.0
@@ -91,7 +102,7 @@ class Eel:
             connection_x = self.head_x - 1 
             connection_y_start = self.head_y + 2
             connection_y_end = self.head_y + 4
-        else: # 'backward'
+        else:
             connection_x = self.head_x + self.head_width
             connection_y_start = self.head_y + 2
             connection_y_end = self.head_y + 4
@@ -100,7 +111,7 @@ class Eel:
     def _calculate_body_thickness(self, segment_index):
         """Calculate the body thickness, tapering toward the tail."""
         progress = segment_index / (self.body_length - 1)
-        thickness = max(1, int(4.5 * (1 - progress) ** 0.9))
+        thickness = max(1, int(4.5 * (1 - progress) ** 0.5))
         return thickness
         
     def _initialize_body(self):
@@ -115,14 +126,12 @@ class Eel:
             else:
                 seg_x = connection_x + (i + 1)
             
-            segment_data = {
-                'x': seg_x,
-                'y': y_center,
-            }
+            segment_data = {'x': seg_x, 'y': y_center}
             self.body_segments.append(segment_data)
     
     def update(self):
         """Update the eel's state, including position and body animation."""
+        self.animation_time += FRAME_RATE
         if self.is_startled:
             self._update_startled_speed()
         self._move_head()
@@ -137,7 +146,7 @@ class Eel:
             if self.head_x >= self.width:
                 self.head_x = -self.head_width
                 self._initialize_body()
-        else: # 'backward'
+        else:
             self.head_x -= self.speed
             if self.head_x <= -self.head_width:
                 self.head_x = self.width
@@ -151,20 +160,25 @@ class Eel:
         """Update body segments to follow the head, simulating inertia and drag."""
         connection_x, y_start, y_end = self._get_body_connection_points()
         leader_x = connection_x
-        leader_y = (y_start + y_end) / 2.0 + (self.head_y_delta * 2.0) # Add inertia from head
+        leader_y = (y_start + y_end) / 2.0 + (self.head_y_delta * 2.0)
         
+        amp_noise = self.noise_amp(self.animation_time * self.NOISE_SPEED)
+
         for i, segment in enumerate(self.body_segments):
             progress = i / self.body_length
             
-            # The front of the body is "stiffer" (higher lerp), tail is looser.
             lerp_factor = 0.8 * (1 - progress) + 0.35 * progress
+            
+            # Amplitude is large at the neck and small at the tail
+            base_amp = self.BASE_AMPLITUDE * (1 - progress)
+            current_amp = base_amp + amp_noise * self.AMP_VARIATION
             
             target_x, target_y = leader_x, leader_y
             
-            # The body's own wave is less influential at the head, more at the tail.
-            wave_influence = progress * 1.2
-            wave_time = (self.head_x * self.wave_frequency) + (i * 0.4) + self.wave_offset
-            wave_y_offset = self.wave_amplitude * math.sin(wave_time) * wave_influence
+            # ** NEW TIME-BASED WAVE CALCULATION **
+            # This creates the wave in time and space, independent of forward speed.
+            phase = (self.animation_time * self.WAVE_SPEED) - (i * self.wave_phase_step)
+            wave_y_offset = current_amp * math.sin(phase)
             target_y += wave_y_offset
             
             new_x = segment['x'] + (target_x - segment['x']) * lerp_factor
@@ -174,7 +188,7 @@ class Eel:
             leader_x, leader_y = new_x, new_y
             
     def _update_startled_speed(self):
-        """Handle the speed and duration of the startled state."""
+        # ... (rest of the class is unchanged) ...
         self.startle_timer -= FRAME_RATE
         if self.startle_timer <= 0:
             self.is_startled = False
@@ -185,7 +199,6 @@ class Eel:
             self.speed = self.normal_speed + (speed_range * progress)
     
     def startle(self):
-        """Trigger the startled state, causing a temporary burst of speed."""
         if not self.is_startled:
             self.is_startled = True
             self.startle_timer = 2.0
@@ -194,30 +207,26 @@ class Eel:
             self.speed = self.peak_startle_speed
             
     def get_adjusted_color(self, color):
-        """Adjust color based on the background for better visibility."""
         from colorama import Back
         if self.background_color == Back.LIGHTCYAN_EX:
             return COLOR_ADJUSTMENTS.get('light_mode', {}).get(color, color)
         return color
         
     def _get_char_for_slope(self, y_delta, is_top):
-        """Selects an ASCII character to represent the curve's slope."""
-        if is_top: # Characters for the top outline
+        if is_top:
             if y_delta < -1.2: return "/"
             if y_delta < -0.3: return "'"
             if y_delta <= 0.3: return "-"
             if y_delta <= 1.2: return '"'
             return "\\"
-        else: # Characters for the bottom outline
+        else:
             if y_delta < -1.2: return "/"
             if y_delta < -0.3: return "-"
             if y_delta <= 0.3: return "_"
-            if y_delta <= 1.2: return ","
+            if y_delta <= 1.2: return "/"
             return "\\"
 
     def draw(self, buffer):
-        """Draw the eel onto the display buffer using slope-based ASCII art."""
-        # Draw head
         head_x, head_y = int(self.head_x), int(self.head_y)
         for line_idx, line_data in enumerate(self.processed_head[self.direction]):
             y = head_y + line_idx
@@ -227,15 +236,12 @@ class Eel:
                     if char != ' ' and 0 <= x < self.width:
                         buffer[y][x] = (char, self.get_adjusted_color(color))
 
-        # Draw body outline
         body_color = self.get_adjusted_color(Fore.GREEN)
         
         for i, segment in enumerate(self.body_segments):
-            seg_x = int(segment['x'])
-            seg_y = segment['y']
+            seg_x, seg_y = int(segment['x']), segment['y']
             thickness = self._calculate_body_thickness(i)
             
-            # Determine slope by comparing to the previous segment
             prev_seg_y = self.body_segments[i-1]['y'] if i > 0 else seg_y
             y_delta = seg_y - prev_seg_y
 
@@ -244,16 +250,14 @@ class Eel:
                 top_y = int(seg_y - half_thickness + 0.5)
                 bottom_y = int(seg_y + half_thickness - 0.5)
 
-                # Draw top outline character based on slope
                 if 0 <= top_y < self.height and 0 <= seg_x < self.width:
                     char = self._get_char_for_slope(y_delta, is_top=True)
                     buffer[top_y][seg_x] = (char, body_color)
                 
-                # Draw bottom outline character based on slope
                 if top_y != bottom_y and 0 <= bottom_y < self.height and 0 <= seg_x < self.width:
                     char = self._get_char_for_slope(y_delta, is_top=False)
                     buffer[bottom_y][seg_x] = (char, body_color)
-            else: # Tail end (thickness is 1)
+            else:
                 y = int(seg_y)
                 if 0 <= y < self.height and 0 <= seg_x < self.width:
                     buffer[y][seg_x] = ('.', body_color)
