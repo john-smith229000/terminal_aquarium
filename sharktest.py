@@ -19,7 +19,7 @@ def load_frames(filepath, marker="-SHARK-", total_frames=26):
 
     return matches[:total_frames]
 
-def animate(frames, delay=5):
+def animate(frames, delay=0.15):
     try:
         while True:
             for i, frame in enumerate(frames, start=1):
