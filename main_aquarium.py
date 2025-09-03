@@ -53,6 +53,9 @@ class Aquarium:
         self.current_background = BACKGROUND_COLOR
         self.paused = False
 
+        self.shark = None
+        self.shark_has_spawned_this_scene = False
+
         self.input_handler = create_input_handler()
         atexit.register(self.cleanup)
 
@@ -117,7 +120,7 @@ class Aquarium:
         
         # Create new objects
         self.fishes = []
-
+        self.shark_has_spawned_this_scene = False
         self.shark = None
         if Shark.should_spawn():
             self.shark_will_spawn = True
@@ -208,6 +211,18 @@ class Aquarium:
         """Plays the chest opening sound if sound is on."""
         if self.sound_on and self.chest_sound:
             self.chest_sound.play()
+    
+    def spawn_shark(self):
+        """Creates a shark if one hasn't already appeared in this scene."""
+        # Do nothing if a shark exists or has already been spawned in this scene
+        if self.shark or self.shark_has_spawned_this_scene:
+            return
+
+        # Create the shark and set flags to prevent re-spawning
+        self.play_shark_sound() 
+        self.shark = Shark(self.width, self.height, self.current_background, self)
+        self.shark_has_spawned_this_scene = True
+        self.shark_will_spawn = False # This stops the natural spawn timer
 
     def play_shark_sound(self):
         """Plays the shark appearance sound if sound is on."""
@@ -403,6 +418,8 @@ class Aquarium:
                             self.create_bubble_burst(random_x, random_y)
                         elif input_result.lower() == 'f':
                             self.drop_food()
+                        elif input_result.lower() == 'j': 
+                            self.spawn_shark()
                 if not self.paused:
                     self.update()
                     self.time_step += 1
@@ -458,12 +475,10 @@ class Aquarium:
         elif self.shark and not self.shark.is_active():
             self.shark = None
         
-        if self.shark_will_spawn and not self.shark:
+        if self.shark_will_spawn and not self.shark_has_spawned_this_scene:
             self.shark_spawn_timer -= 1 # Countdown each frame
             if self.shark_spawn_timer <= 0:
-                self.play_shark_sound()
-                self.shark = Shark(self.width, self.height, self.current_background, self)
-                self.shark_will_spawn = False # Ensure it only spawns once per scene
+                self.spawn_shark() # Call the new central spawn method
 
     def _notify_fish_of_food(self):
         """Finds all fish within a radius of the food and tells them to seek it."""
