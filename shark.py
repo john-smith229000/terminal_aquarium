@@ -1,11 +1,11 @@
-# Updated shark.py
-
 import random
 import math
 import re
 from colorama import Fore, Back, Style
 from fish import Fish
 from config import FRAME_RATE, STARTLE_RADIUS, SHARK_CHANCE
+import os  
+import sys
 
 # TWEAK: Define a list of possible colors for the shark
 SHARK_COLORS = [
@@ -17,6 +17,15 @@ SHARK_COLORS = [
     Fore.LIGHTWHITE_EX,
     Fore.LIGHTBLUE_EX
 ]
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class Shark(Fish):
     """A special event shark that swims across the top of the screen with animation."""
@@ -67,7 +76,9 @@ class Shark(Fish):
     def _load_shark_frames(self):
         """Load and normalize shark animation frames from mockups.txt file."""
         try:
-            with open("mockups.txt", "r", encoding="utf-8") as f:
+            # FIX: Use resource_path to find the file
+            mockups_path = resource_path("mockups.txt")
+            with open(mockups_path, "r", encoding="utf-8") as f:
                 content = f.read()
             
             start_marker = "-SHARK-"

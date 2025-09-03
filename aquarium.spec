@@ -12,6 +12,8 @@ a = Analysis(
         ('bubbles-69893.mp3', '.'),
         ('balloon-inflate-4-184055.mp3', '.'),
         ('material-chest-open-394472.mp3', '.'),
+	('shark.wav', '.'),
+	('mockups.txt', '.'),
     ],
     hiddenimports=[],
     hookspath=[],
