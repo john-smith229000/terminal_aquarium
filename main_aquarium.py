@@ -15,6 +15,7 @@ from seahorse import Seahorse, BabySeahorse
 from school import School
 from crab import Crab
 from shark import Shark
+from eel import Eel
 from bubble import Bubble, ClickBubble
 from seaweed import Seaweed
 from decoration import Decoration, generate_decorations
@@ -117,6 +118,11 @@ class Aquarium:
         crab_spawn_chance = random.uniform(0.3, 0.8)  # 30-80% chance
         self.food_pellets = []
         self.food_notice_timer = 0 
+
+        if random.random() < EEL_SPAWN_CHANCE:
+            self.eels = [Eel(self.width, self.height, self.current_background)]
+        else:
+            self.eels = []
         
         # Create new objects
         self.fishes = []
@@ -464,6 +470,9 @@ class Aquarium:
         
         # Update click bubbles and remove expired ones
         self.click_bubbles = [bubble for bubble in self.click_bubbles if bubble.update()]
+
+        for eel in self.eels:
+            eel.update()
         
         for jelly in self.jellyfishes: 
             jelly.update()
@@ -572,6 +581,9 @@ class Aquarium:
         
         if self.shark and self.shark.is_active():
             self.shark.draw(buffer)
+        
+        for eel in self.eels:
+            eel.draw(buffer)
 
         # 7. Draw Crab (on seafloor, before ocean floor)
         if self.crab:
