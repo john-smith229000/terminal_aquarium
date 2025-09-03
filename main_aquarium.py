@@ -90,6 +90,13 @@ class Aquarium:
             except Exception:
                 print(f"Could not load chest sound effect.")
                 self.chest_sound = None
+            try:
+                shark_sound_path = resource_path('shark.wav') # <-- Use your file's name
+                self.shark_sound = pygame.mixer.Sound(shark_sound_path)
+                print("Shark sound effect loaded successfully.")
+            except Exception as e:
+                print(f"Could not load shark sound effect: {e}")
+                self.shark_sound = None
         except Exception as e:
             print(f"Could not load sound file: {e}")
             print("Sound will be unavailable.")
@@ -201,6 +208,11 @@ class Aquarium:
         """Plays the chest opening sound if sound is on."""
         if self.sound_on and self.chest_sound:
             self.chest_sound.play()
+
+    def play_shark_sound(self):
+        """Plays the shark appearance sound if sound is on."""
+        if self.sound_on and self.shark_sound:
+            self.shark_sound.play()
 
     def drop_food(self):
         """Creates a food pellet at the top of the screen."""
@@ -449,6 +461,7 @@ class Aquarium:
         if self.shark_will_spawn and not self.shark:
             self.shark_spawn_timer -= 1 # Countdown each frame
             if self.shark_spawn_timer <= 0:
+                self.play_shark_sound()
                 self.shark = Shark(self.width, self.height, self.current_background, self)
                 self.shark_will_spawn = False # Ensure it only spawns once per scene
 
