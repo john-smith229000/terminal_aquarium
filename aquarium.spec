@@ -1,5 +1,3 @@
-aquarium.spec
-
 import os
 
 block_cipher = None
