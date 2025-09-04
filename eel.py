@@ -29,7 +29,7 @@ class Eel:
         
         # Variability: Controls the Perlin noise effect for a more organic feel.
         self.NOISE_SPEED = 0.1      
-        self.AMP_VARIATION = 1.5    
+        self.AMP_VARIATION = 0.4    
         # --- End of Tuning Parameters ---
 
         self.width = width
@@ -41,7 +41,10 @@ class Eel:
 
         # Initialize Perlin noise generators
         self.noise_amp = PerlinNoise(octaves=2, seed=random.randint(101, 200))
+        self.noise_head_amp = PerlinNoise(octaves=3, seed=random.randint(201, 300))
+        self.noise_head_freq = PerlinNoise(octaves=4, seed=random.randint(301, 400))
         self.animation_time = 0
+
 
         self.head_art = {
             'forward': [
@@ -52,7 +55,7 @@ class Eel:
                 """-="-\\;,_; """,
             ],
             'backward':[
-                """      _""",
+                """       _""",
                 """ _.-'" _''-""" ,      
                 """/    (@)   '""",
                 """`-,.,,._   """,      
@@ -66,7 +69,7 @@ class Eel:
             for line in art:
                 processed_line = []
                 for char in line:
-                    color = Fore.GREEN if char != ' ' else Fore.RESET
+                    color = Fore.LIGHTGREEN_EX if char != ' ' else Fore.RESET
                     processed_line.append((char, color))
                 processed_lines.append(processed_line)
             self.processed_head[direction] = processed_lines
@@ -78,7 +81,7 @@ class Eel:
         self.body_segments = []
         
         self.direction = random.choice(['forward', 'backward'])
-        self.speed = random.uniform(0.5, 1.0)
+        self.speed = random.uniform(1.0, 1.5)
         self.normal_speed = self.speed
         
         self.base_head_y = random.randint(5, height - self.head_height - 10)
@@ -87,8 +90,12 @@ class Eel:
         self.prev_head_y = self.head_y
         self.head_y_delta = 0
 
-        self.head_wave_amplitude = random.uniform(0.2, 1.0)
-        self.head_wave_frequency = random.uniform(0.04, 0.08)
+        #self.head_wave_amplitude = random.uniform(0.2, 0.8)
+        self.head_wave_amplitude = 0.0
+        #self.head_wave_frequency = random.uniform(0.05, 0.2)
+        self.head_wave_frequency = 0.0
+
+        self.is_wrapping = False # ADDED: State to track if the eel is off-screen
         
         self._initialize_body()
         
@@ -111,7 +118,7 @@ class Eel:
     def _calculate_body_thickness(self, segment_index):
         """Calculate the body thickness, tapering toward the tail."""
         progress = segment_index / (self.body_length - 1)
-        thickness = max(1, int(4.5 * (1 - progress) ** 0.5))
+        thickness = max(1, int(4.5 * (1 - progress) ** 0.3))
         return thickness
         
     def _initialize_body(self):
@@ -141,16 +148,68 @@ class Eel:
         """Handle head movement, including horizontal travel and vertical wave motion."""
         self.prev_head_y = self.head_y
         
+        # --- CHANGED: Screen wrapping logic ---
+        # Always move the head first
         if self.direction == 'forward':
             self.head_x += self.speed
-            if self.head_x >= self.width:
-                self.head_x = -self.head_width
-                self._initialize_body()
         else:
             self.head_x -= self.speed
-            if self.head_x <= -self.head_width:
-                self.head_x = self.width
+            
+        # Check if the eel needs to wrap around the screen
+        if not self.is_wrapping:
+            # Check if the head has moved off-screen to START the wrapping process
+            if self.direction == 'forward' and self.head_x > self.width:
+                self.is_wrapping = True
+            elif self.direction == 'backward' and self.head_x < -self.head_width:
+                self.is_wrapping = True
+        else:
+            # If wrapping, check if the TAIL has moved off-screen to COMPLETE the process
+            tail = self.body_segments[-1]
+            if self.direction == 'forward' and tail['x'] > self.width:
+                # Reset to the other side
+                self.head_x = -self.head_width
+                self.base_head_y = random.randint(5, self.height - self.head_height - 10)
                 self._initialize_body()
+                self.is_wrapping = False
+            elif self.direction == 'backward' and tail['x'] < 0:
+                # Reset to the other side
+                self.head_x = self.width
+                self.base_head_y = random.randint(5, self.height - self.head_height - 10)
+                self._initialize_body()
+                self.is_wrapping = False
+        # --- End of changed section ---
+
+        MIN_HEAD_AMP = 0.2
+        MAX_HEAD_AMP = 4
+        
+        # Use Perlin noise to get a smooth, random value over time.
+        # The PerlinNoise library returns a value in the range [-0.5, 0.5].
+        noise = self.noise_head_amp(self.animation_time * 0.07) # A slow speed for gentle changes
+        
+        # Normalize the noise value to a [0, 1] range by adding 0.5.
+        normalized_noise = noise + 0.5
+        
+        # Map the normalized value to our desired amplitude range.
+        amp_range = MAX_HEAD_AMP - MIN_HEAD_AMP
+        self.head_wave_amplitude = MIN_HEAD_AMP + (normalized_noise * amp_range)
+
+         # Define the desired range for the head's wave speed.
+        MIN_HEAD_FREQ = 0.04
+        MAX_HEAD_FREQ = 0.3
+
+        # Use its own Perlin noise to get a smooth, random value.
+        noise_freq = self.noise_head_freq(self.animation_time * 0.05) # Using an even slower speed for subtle changes
+
+        # Normalize the noise value to a [0, 1] range.
+        normalized_noise_freq = noise_freq + 0.5
+
+        # Map the normalized value to our desired frequency range.
+        freq_range = MAX_HEAD_FREQ - MIN_HEAD_FREQ
+        self.head_wave_frequency = MIN_HEAD_FREQ + (normalized_noise_freq * freq_range)
+
+        y_offset = self.head_wave_amplitude * math.sin(self.head_x * self.head_wave_frequency)
+        self.head_y = self.base_head_y + y_offset
+        self.head_y_delta = self.head_y - self.prev_head_y
                 
         y_offset = self.head_wave_amplitude * math.sin(self.head_x * self.head_wave_frequency)
         self.head_y = self.base_head_y + y_offset
@@ -160,7 +219,9 @@ class Eel:
         """Update body segments to follow the head, simulating inertia and drag."""
         connection_x, y_start, y_end = self._get_body_connection_points()
         leader_x = connection_x
-        leader_y = (y_start + y_end) / 2.0 + (self.head_y_delta * 2.0)
+        
+        # CHANGED: Reduced the multiplier from 2.0 to 0.8 to prevent neck disconnection
+        leader_y = (y_start + y_end) / 2.0 + (self.head_y_delta * 0.8)
         
         amp_noise = self.noise_amp(self.animation_time * self.NOISE_SPEED)
 
@@ -215,8 +276,8 @@ class Eel:
     def _get_char_for_slope(self, y_delta, is_top):
         if is_top:
             if y_delta < -1.2: return "/"
-            if y_delta < -0.3: return "'"
-            if y_delta <= 0.3: return "-"
+            if y_delta < -0.3: return "-"
+            if y_delta <= 0.3: return "'"
             if y_delta <= 1.2: return '"'
             return "\\"
         else:
@@ -236,10 +297,10 @@ class Eel:
                     if char != ' ' and 0 <= x < self.width:
                         buffer[y][x] = (char, self.get_adjusted_color(color))
 
-        body_color = self.get_adjusted_color(Fore.GREEN)
+        body_color = self.get_adjusted_color(Fore.LIGHTGREEN_EX)
         
         for i, segment in enumerate(self.body_segments):
-            seg_x, seg_y = int(segment['x']), segment['y']
+            seg_x, seg_y = int(segment['x']), int(segment['y'])
             thickness = self._calculate_body_thickness(i)
             
             prev_seg_y = self.body_segments[i-1]['y'] if i > 0 else seg_y

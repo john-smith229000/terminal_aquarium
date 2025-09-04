@@ -117,6 +117,7 @@ COLOR_ADJUSTMENTS = {
         Fore.LIGHTYELLOW_EX: Fore.RED,    # Light yellow hard to see
         Fore.LIGHTBLUE_EX: Fore.BLUE,     # Light blue blends
         Fore.LIGHTMAGENTA_EX: Fore.MAGENTA, # Light magenta harder to see
+        Fore.LIGHTGREEN_EX: Fore.BLACK
     }
 }
 
