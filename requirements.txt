@@ -1,0 +1,5 @@
+colorama
+perlin-noise
+pyinstaller
+playsound
+pyobjc
