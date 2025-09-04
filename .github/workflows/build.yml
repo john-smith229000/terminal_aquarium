@@ -1,31 +1,24 @@
 name: Build Aquarium Executables
-
 on:
   push:
-    branches: [ "eel" ]
+    branches: ["eel"]
   workflow_dispatch:
-
 jobs:
   build-macos:
     runs-on: macos-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - name: Build with PyInstaller
         run: pyinstaller aquarium.spec
-
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
