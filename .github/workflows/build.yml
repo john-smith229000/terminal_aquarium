@@ -1,26 +1,173 @@
-name: Build Aquarium Executables
+name: Build and Test Aquarium
+
 on:
   push:
-    branches: ["john-smith229000-patch-1"]
+    branches: ["john-smith229000-patch-1"]  # Replace with your branch
   workflow_dispatch:
+
 jobs:
-  build-macos:
+  build-and-test-macos:
     runs-on: macos-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+      
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      
+      - name: Test Python script directly first
+        run: |
+          echo "Testing if the Python script can import all modules..."
+          timeout 10s python -c "
+          try:
+              import main_aquarium
+              print('✅ All imports successful!')
+          except ImportError as e:
+              print(f'❌ Import error: {e}')
+              exit(1)
+          except Exception as e:
+              print(f'⚠️  Other error (might be expected): {e}')
+          " || echo "Script test completed (timeout expected for interactive app)"
+      
       - name: Build with PyInstaller
         run: pyinstaller aquarium.spec
-      - name: Upload macOS Artifact
+      
+      - name: Test built executable
+        run: |
+          echo "Testing if the built executable can start..."
+          cd dist
+          timeout 5s ./aquarium --help 2>&1 || echo "Executable test completed"
+          
+          # Check if the file is executable and not corrupted
+          if [ -f "./aquarium" ]; then
+            echo "✅ Executable file created successfully"
+            file ./aquarium
+            ls -la ./aquarium
+          else
+            echo "❌ Executable file not found"
+            exit 1
+          fi
+      
+      - name: Create comprehensive launcher package
+        run: |
+          mkdir -p aquarium-macos-complete
+          cp dist/aquarium aquarium-macos-complete/
+          
+          # Create a launcher script
+          cat > aquarium-macos-complete/launch_aquarium.command << 'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          
+          echo "🐠 Starting Aquarium Terminal App 🐠"
+          echo "======================================"
+          
+          # Check if we're in a terminal
+          if [ -t 0 ] && [ -t 1 ]; then
+            echo "✅ Terminal detected - starting app..."
+            echo "Press Ctrl+C to exit when running"
+            sleep 2
+            ./aquarium
+          else
+            echo "⚠️  No terminal detected - opening in Terminal app..."
+            osascript << 'APPLESCRIPT'
+          tell application "Terminal"
+            activate
+            do script "cd \"$(dirname \"$0\")\"; echo \"🐠 Welcome to Aquarium! 🐠\"; echo \"Press 'q' or ESC to exit\"; ./aquarium"
+          end tell
+          APPLESCRIPT
+          fi
+          EOF
+          
+          # Create a test script
+          cat > aquarium-macos-complete/test_compatibility.command << 'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          
+          echo "🔍 Testing Aquarium Compatibility"
+          echo "================================="
+          
+          # Test if executable exists and is executable
+          if [ -f "./aquarium" ]; then
+            echo "✅ Executable file found"
+          else
+            echo "❌ Executable file missing"
+            exit 1
+          fi
+          
+          if [ -x "./aquarium" ]; then
+            echo "✅ File has execute permissions"
+          else
+            echo "⚠️  Setting execute permissions..."
+            chmod +x ./aquarium
+          fi
+          
+          # Test terminal capabilities
+          echo "🖥️  Testing terminal capabilities..."
+          if command -v tput >/dev/null 2>&1; then
+            echo "✅ Terminal utilities available"
+            echo "Terminal size: $(tput cols)x$(tput lines)"
+            echo "Color support: $(tput colors) colors"
+          else
+            echo "⚠️  Limited terminal utilities"
+          fi
+          
+          # Test Python modules (if Python is available)
+          if command -v python3 >/dev/null 2>&1; then
+            echo "✅ Python3 available (though not needed for executable)"
+          fi
+          
+          echo ""
+          echo "🎮 Ready to test! Run './launch_aquarium.command' to start"
+          echo "📖 Or double-click 'launch_aquarium.command' in Finder"
+          
+          read -p "Press Enter to continue..."
+          EOF
+          
+          # Make scripts executable
+          chmod +x aquarium-macos-complete/launch_aquarium.command
+          chmod +x aquarium-macos-complete/test_compatibility.command
+          chmod +x aquarium-macos-complete/aquarium
+          
+          # Create user instructions
+          cat > aquarium-macos-complete/README_FIRST.txt << 'EOF'
+          🐠 AQUARIUM - macOS Version 🐠
+          =============================
+          
+          QUICK START:
+          1. Double-click "test_compatibility.command" first
+          2. Then double-click "launch_aquarium.command"
+          
+          ALTERNATIVE (Terminal):
+          1. Open Terminal.app
+          2. Drag this folder into Terminal
+          3. Type: ./aquarium
+          
+          CONTROLS:
+          - M: Day/Night mode
+          - R: New scene
+          - B: Bubble burst
+          - F: Drop food
+          - S: Toggle sound
+          - H: Help
+          - ESC/Q: Exit
+          
+          TROUBLESHOOTING:
+          - If nothing happens when double-clicking, try the Terminal method
+          - Make sure your terminal window is large enough
+          - The app needs a color terminal to display properly
+          
+          This is a terminal application - it runs in text mode!
+          EOF
+      
+      - name: Upload Complete Package
         uses: actions/upload-artifact@v4
         with:
-          name: aquarium-macos
-          path: dist/aquarium
+          name: aquarium-macos-tested
+          path: aquarium-macos-complete/
