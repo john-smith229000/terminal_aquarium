@@ -1,7 +1,7 @@
 name: Build Aquarium Executables
 on:
   push:
-    branches: ["eel"]
+    branches: ["john-smith229000-patch-1"]
   workflow_dispatch:
 jobs:
   build-macos:
