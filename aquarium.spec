@@ -5,7 +5,7 @@ import os
 block_cipher = None
 
 a = Analysis(
-['aquarium.py'], # CORRECTED FILENAME HERE
+['main_aquarium.py'], # CORRECTED FILENAME HERE
 pathex=[],
 binaries=[],
 datas=[
