@@ -1,5 +1,4 @@
-colorama
-perlin-noise
-pyinstaller
-playsound
-pyobjc
+colorama==0.4.6
+perlin-noise==1.12
+pygame==2.5.2
+pyinstaller==6.3.0
