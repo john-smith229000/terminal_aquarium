@@ -119,10 +119,8 @@ class Aquarium:
         self.food_pellets = []
         self.food_notice_timer = 0 
 
-        if random.random() < EEL_SPAWN_CHANCE:
-            self.eels = [Eel(self.width, self.height, self.current_background)]
-        else:
-            self.eels = []
+        self.eels = []
+        self.eel_spawn_timer = EEL_SPAWN_INITIAL_DELAY
         
         # Create new objects
         self.fishes = []
@@ -473,6 +471,7 @@ class Aquarium:
 
         for eel in self.eels:
             eel.update()
+        self.eels = [eel for eel in self.eels if eel.is_active()]
         
         for jelly in self.jellyfishes: 
             jelly.update()
@@ -488,6 +487,12 @@ class Aquarium:
             self.shark_spawn_timer -= 1 # Countdown each frame
             if self.shark_spawn_timer <= 0:
                 self.spawn_shark() # Call the new central spawn method
+        
+        self.eel_spawn_timer -= 1
+        if self.eel_spawn_timer <= 0:
+            self.eel_spawn_timer = EEL_SPAWN_INTERVAL  # Reset timer for the next interval
+            if random.random() < EEL_SPAWN_CHANCE:
+                self.eels.append(Eel(self.width, self.height, self.current_background))
 
     def _notify_fish_of_food(self):
         """Finds all fish within a radius of the food and tells them to seek it."""
