@@ -12,6 +12,7 @@ from jellyfish_module import Jellyfish
 from fish import Fish
 from puffer import PufferFish
 from seahorse import Seahorse, BabySeahorse
+from angler import AnglerFish
 from school import School
 from crab import Crab
 from shark import Shark
@@ -56,6 +57,7 @@ class Aquarium:
 
         self.shark = None
         self.shark_has_spawned_this_scene = False
+        self.angler_fish = None
 
         self.input_handler = create_input_handler()
         atexit.register(self.cleanup)
@@ -124,6 +126,7 @@ class Aquarium:
         
         # Create new objects
         self.fishes = []
+        self.angler_fish = None
         self.shark_has_spawned_this_scene = False
         self.shark = None
         if Shark.should_spawn():
@@ -152,6 +155,11 @@ class Aquarium:
                 if num_fish > 0:
                     self.fishes.append(baby)
                     num_fish -= 1
+        
+        if num_fish > 0 and random.random() < ANGLER_SPAWN_CHANCE:
+            self.angler_fish = AnglerFish(self.width, self.height, self.current_background)
+            num_fish -= 1
+
         for _ in range(num_fish):
             self.fishes.append(Fish(self.width, self.height, self.current_background))
         self.schools = [School(self.width, self.height, self.current_background) for _ in range(num_schools)]
@@ -320,6 +328,9 @@ class Aquarium:
             if distance <= STARTLE_RADIUS:
                 fish.startle()
         
+        if self.angler_fish:
+            dist = math.sqrt((self.angler_fish.x - x)**2 + (self.angler_fish.y - y)**2)
+            if dist <= STARTLE_RADIUS: self.angler_fish.startle()
         for school in self.schools:
             school_center_x = school.x + school.formation_width / 2
             school_center_y = school.y + school.formation_height / 2
@@ -334,6 +345,7 @@ class Aquarium:
             current_index = self.background_colors.index(self.current_background)
             next_index = (current_index + 1) % len(self.background_colors)
             self.current_background = self.background_colors[next_index]
+            all_fish = self.fishes + ([self.angler_fish] if self.angler_fish else [])
             
             # Update background reference in all objects
             for fish in self.fishes:
@@ -459,7 +471,8 @@ class Aquarium:
             if self.food_notice_timer <= 0 and self.food_pellets:
                 self._notify_fish_of_food()
 
-        for fish in self.fishes:
+        all_fish_to_update = self.fishes + ([self.angler_fish] if self.angler_fish else [])
+        for fish in all_fish_to_update:
             fish.update()
         for school in self.schools:
             school.update()
@@ -552,7 +565,7 @@ class Aquarium:
 
     def draw(self):
         """Draws the entire scene to the terminal."""
-        buffer = [[(' ', Fore.RESET) for _ in range(self.width)] for _ in range(self.height)]
+        buffer = [[(' ', self.current_background) for _ in range(self.width)] for _ in range(self.height)]
 
         # 1. Draw Seaweed
         for seaweed in self.seaweeds:
@@ -593,6 +606,9 @@ class Aquarium:
         # 7. Draw Crab (on seafloor, before ocean floor)
         if self.crab:
             self.crab.draw(buffer)
+        
+        if self.angler_fish:
+            self.angler_fish.draw_body(buffer)
 
         # 8. Draw the ocean floor
         """floor_y = self.height - 1

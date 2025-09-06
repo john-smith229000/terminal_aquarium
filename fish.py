@@ -250,6 +250,6 @@ class Fish:
                         char_art, color = item
                         current_x = x + char_idx
                         if char_art != ' ' and 0 <= current_x < self.width:
-                            buffer[current_y][current_x] = (char_art, color)
+                            buffer[current_y][current_x] = (char_art, color + self.background_color)
           
 

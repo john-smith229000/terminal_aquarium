@@ -19,6 +19,7 @@ CRAB_SPAWN_CHANCE = 5.0  # 50% chance to spawn a crab
 DECORATION_SPAWN_CHANCE = 0.6  # 60% chance to spawn decorations
 MAX_DECORATIONS = 4  # Maximum decorations at once
 PUFFER_SPAWN_CHANCE = 0.3 # 30% chance for a puffer fish to spawn
+ANGLER_SPAWN_CHANCE = 1.0
 EEL_SPAWN_CHANCE = 0.3  # 30% chance per check
 EEL_SPAWN_INITIAL_DELAY = 100  # First check at frame 100
 EEL_SPAWN_INTERVAL = 1200 # Check every 1200 frames after the first
